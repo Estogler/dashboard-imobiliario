@@ -1,6 +1,3 @@
-# app.py
-# STREAMLIT RUN APP.PY
-
 import streamlit as st
 import pandas as pd
 import plotly.express as px
