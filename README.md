@@ -1,117 +1,151 @@
-# 🏢 Dashboard Imobiliário Premium
+# 🏢 Dashboard Imobiliário Premium V2
 
-Aplicação desenvolvida para transformar uma planilha imobiliária em uma ferramenta visual de apoio à decisão.
+Aplicação desenvolvida para transformar planilhas imobiliárias em uma ferramenta visual inteligente de apoio à decisão comercial.
 
-🔗 **Acesse o projeto online:**
+🔗 **Acesse o projeto online:**  
 https://dashboard-imobiliario-n7mjqeljzbepin8sbbrlfy.streamlit.app/
 
 ---
 
 ## 📊 Contexto
 
-Este projeto surgiu a partir de uma necessidade real: a imobiliária utilizava apenas uma planilha (Excel) para acompanhar suas unidades, o que dificultava a visualização estratégica dos dados.
+Este projeto nasceu de uma necessidade real do mercado imobiliário.
 
-Com o objetivo de ajudar na leitura e interpretação dessas informações, foi desenvolvido um dashboard interativo que transforma dados brutos em insights claros e acionáveis.
+Muitas construtoras e imobiliárias ainda controlam estoque, preços e disponibilidade de unidades apenas por planilhas, dificultando análises rápidas e tomadas de decisão estratégicas.
+
+Pensando nisso, foi desenvolvido um dashboard interativo que converte dados brutos em informações claras, organizadas e úteis para vendas.
 
 ---
 
 ## 🎯 Objetivo
 
-Facilitar a análise dos dados imobiliários, permitindo que a equipe:
+Facilitar a gestão comercial de empreendimentos imobiliários, permitindo:
 
-* Entenda melhor o comportamento dos preços
-* Compare blocos, andares e características dos imóveis
-* Identifique oportunidades de venda
-* Tome decisões com base em dados, não apenas em planilhas
-
----
-
-## 🚀 O que foi feito
-
-* Estruturação e tratamento dos dados da planilha original
-* Padronização de informações (valores, área, categorias)
-* Criação de métricas estratégicas (KPIs)
-* Desenvolvimento de um dashboard interativo e intuitivo
+- Visualizar estoque disponível
+- Comparar tipologias
+- Analisar preços por andar
+- Identificar oportunidades de venda
+- Acompanhar unidades disponíveis em tempo real
+- Atualizar dados rapidamente via CSV
 
 ---
 
-## 📈 Principais análises
+## 🚀 O que foi desenvolvido
 
-* **Resumo executivo**
-
-  * Total de unidades
-  * Valor total em estoque
-  * Ticket médio
-  * Maior e menor valor
-
-* **Comparação entre blocos**
-
-  * Identificação de quais blocos concentram maior valor
-
-* **Valorização por andar**
-
-  * Análise de como o preço varia conforme a altura
-
-* **Posição solar**
-
-  * Impacto de nascente, poente e sul nos preços
-
-* **Preço por m²**
-
-  * Relação entre área e valor
-
-* **Perfil das unidades**
-
-  * Distribuição por quantidade de quartos
+- Tratamento automático dos dados
+- Leitura dinâmica via upload de CSV
+- Dashboard interativo e responsivo
+- KPIs estratégicos
+- Tabela comercial automática
+- Avaliação média de imóveis
+- Filtros inteligentes
 
 ---
 
-## 🛠️ Tecnologias utilizadas
+## 📈 Principais Recursos
 
-* Python
-* Streamlit
-* Pandas
-* Plotly
+### 📌 Resumo Executivo
+
+- Total de unidades disponíveis
+- Valor médio
+- Menor preço
+- Maior preço
+
+### 📌 Tabela Comercial
+
+- Tipologia
+- Quantidade disponível
+- Preço inicial
+- Preço final
+- Avaliação média
+
+### 📌 Gráficos Inteligentes
+
+- Preço por andar
+- Estoque por tipologia
+- Distribuição de unidades
+
+### 📌 Atualização Simplificada
+
+Basta enviar um novo arquivo CSV para atualizar todo o sistema automaticamente.
 
 ---
 
-## 📂 Estrutura do projeto
+## 🛠️ Tecnologias Utilizadas
 
-```
-dashboard-imobiliario/
-│
-├── apartamentos.csv
-├── app.py
-├── requirements.txt
-```
+- Python
+- Streamlit
+- Pandas
+- Plotly
 
 ---
 
-## ▶️ Como executar localmente
+## 📂 Estrutura do Projeto
 
 ```bash
-git clone https://github.com/seu-usuario/dashboard-imobiliario.git
-cd dashboard-imobiliario
+dashboard-imobiliario/
+│
+├── app.py
+├── requirements.txt
+└── README.md
+```
+
+---
+
+## ▶️ Como Executar Localmente
+
+### Instalar dependências
+
+```bash
 pip install -r requirements.txt
+```
+
+### Rodar sistema
+
+```bash
 streamlit run app.py
+```
+
+---
+
+## 📄 Estrutura esperada do CSV
+
+```csv
+Empreendimento;UF;Torre;Unidade;Status da Unidade;Valor Unidade/Lote;Andar;Tipologia
 ```
 
 ---
 
 ## 💡 Resultado
 
-O que antes era apenas uma planilha estática se tornou uma ferramenta visual dinâmica, permitindo uma leitura muito mais clara dos dados e apoiando decisões comerciais com mais segurança.
+O que antes era apenas uma planilha estática se tornou uma plataforma visual dinâmica, permitindo análises rápidas e decisões comerciais baseadas em dados.
 
 ---
 
-## 👨‍💻 Autor
+## 📈 Próximas Versões
 
-Desenvolvido por **Kauã Oliveira**
+- Multiempreendimentos
+- Dashboard online corporativo
+- Login de usuários
+- Integração com CRM
+- Atualização automática em nuvem
+- Ranking de vendas
 
 ---
 
-## ⭐ Considerações finais
+## 👨‍💻 Desenvolvido por
 
-Projeto com foco em resolver um problema real, aplicando análise de dados para gerar valor no contexto imobiliário.
+**Kauã Oliveira**  
+**Estogler Analytics**
 
 ---
+
+## 📞 Contato
+
+Projetos personalizados sob demanda.
+
+---
+
+## ⭐ Considerações Finais
+
+Projeto criado com foco em resolver problemas reais do setor imobiliário utilizando tecnologia, automação e análise de dados.
