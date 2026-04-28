@@ -1,191 +1,239 @@
+# app.py
+# STREAMLIT RUN APP.PY
+
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-import re
 
-# ================= CONFIG =================
+# =====================================================
+# CONFIG
+# =====================================================
 st.set_page_config(
     page_title="Dashboard Imobiliário Premium",
     page_icon="🏢",
     layout="wide"
 )
 
-# ================= DADOS =================
-@st.cache_data
-def carregar_dados():
-    bruto = pd.read_csv("apartamentos.csv", sep=";", engine="python", header=None)
+# =====================================================
+# FUNÇÕES
+# =====================================================
+def limpar_valor(valor):
+    valor = str(valor)
+    valor = valor.replace("R$", "").replace(".", "").replace(",", ".").strip()
+    return float(valor)
 
-    dados = []
+def moeda(v):
+    return f"R$ {v:,.0f}".replace(",", "X").replace(".", ",").replace("X", ".")
 
-    for _, row in bruto.iterrows():
-        linha = [str(x).strip() for x in row if pd.notna(x) and str(x).strip() != ""]
+def classificar_tipologia(txt):
+    txt = str(txt).upper()
 
-        if not linha:
-            continue
+    varanda = "VAR" in txt
+    moto = "MOT" in txt
+    carro = "CAR" in txt
 
-        texto = " ".join(linha).upper()
+    if varanda and carro:
+        return "F2/HMP (c/ Vaga Carro) (c/ Varanda)"
+    elif varanda and moto:
+        return "F2/HMP (c/ Vaga Moto) (c/ Varanda)"
+    elif varanda:
+        return "F2/HMP (c/ Varanda)"
+    elif carro:
+        return "F2/HMP (c/ Vaga Carro)"
+    elif moto:
+        return "F2/HMP (c/ Vaga Moto)"
+    else:
+        return "Faixa 2"
 
-        if "UNIDADE" in texto:
-            continue
+# =====================================================
+# TÍTULO
+# =====================================================
+st.title("🏢 Dashboard Imobiliário Premium")
+st.caption("Sistema Inteligente de Precificação Imobiliária")
 
-        if len(linha) < 6:
-            continue
+# =====================================================
+# UPLOAD CSV
+# =====================================================
+arquivo = st.file_uploader(
+    "Envie o arquivo CSV do empreendimento",
+    type=["csv"]
+)
 
-        idx = None
-        for i, val in enumerate(linha):
-            if val.isdigit():
-                idx = i
-                break
+if not arquivo:
+    st.info("Faça upload do CSV para iniciar.")
+    st.stop()
 
-        if idx is None or len(linha) < idx + 6:
-            continue
+# =====================================================
+# LEITURA
+# =====================================================
+df = pd.read_csv(arquivo, sep=";", encoding="utf-8")
 
-        unidade = linha[idx]
-        bloco = linha[idx + 1]
-        andar = linha[idx + 2]
-        quartos = linha[idx + 3]
-        posicao = linha[idx + 4]
-        area = linha[idx + 5]
+# =====================================================
+# LIMPEZA
+# =====================================================
+df["Valor"] = df["Valor Unidade/Lote"].apply(limpar_valor)
+df["Andar"] = pd.to_numeric(df["Andar"], errors="coerce")
+df["Tipologia Final"] = df["Tipologia"].apply(classificar_tipologia)
 
-        m = re.search(r'R\$\s*([\d\.]+,\d{2})', " ".join(linha))
-        if not m:
-            continue
+# disponíveis
+df_disp = df[
+    df["Status da Unidade"].str.upper().str.contains("DISPON")
+].copy()
 
-        valor = m.group(1)
-
-        dados.append([unidade, bloco, andar, quartos, posicao, area, valor])
-
-    df = pd.DataFrame(dados, columns=[
-        "unidade", "bloco", "andar", "quartos", "posicao", "area", "valor_venda"
-    ])
-
-    df["valor_venda"] = (
-        df["valor_venda"]
-        .str.replace(".", "", regex=False)
-        .str.replace(",", ".", regex=False)
-    )
-    df["valor_venda"] = pd.to_numeric(df["valor_venda"], errors="coerce")
-
-    df["area"] = (
-        df["area"]
-        .str.replace("m²", "", regex=False)
-        .str.replace(",", ".", regex=False)
-        .str.replace(" ", "", regex=False)
-    )
-    df["area"] = pd.to_numeric(df["area"], errors="coerce")
-
-    df["preco_m2"] = df["valor_venda"] / df["area"]
-
-    return df.dropna()
-
-df = carregar_dados()
-
-# ================= SIDEBAR =================
+# =====================================================
+# SIDEBAR FILTROS
+# =====================================================
 st.sidebar.header("🔎 Filtros")
 
-blocos = st.sidebar.multiselect("Bloco", df["bloco"].unique(), default=df["bloco"].unique())
-andares = st.sidebar.multiselect("Andar", df["andar"].unique(), default=df["andar"].unique())
-quartos = st.sidebar.multiselect("Quartos", df["quartos"].unique(), default=df["quartos"].unique())
+torre = st.sidebar.multiselect(
+    "Torre / Bloco",
+    sorted(df_disp["Torre"].unique()),
+    default=sorted(df_disp["Torre"].unique())
+)
 
-df_filtrado = df[
-    (df["bloco"].isin(blocos)) &
-    (df["andar"].isin(andares)) &
-    (df["quartos"].isin(quartos))
+tipologia = st.sidebar.multiselect(
+    "Tipologia",
+    sorted(df_disp["Tipologia Final"].unique()),
+    default=sorted(df_disp["Tipologia Final"].unique())
+)
+
+andar_min = int(df_disp["Andar"].min())
+andar_max = int(df_disp["Andar"].max())
+
+faixa_andar = st.sidebar.slider(
+    "Andar",
+    andar_min,
+    andar_max,
+    (andar_min, andar_max)
+)
+
+# aplicar filtros
+base = df_disp[
+    (df_disp["Torre"].isin(torre)) &
+    (df_disp["Tipologia Final"].isin(tipologia)) &
+    (df_disp["Andar"] >= faixa_andar[0]) &
+    (df_disp["Andar"] <= faixa_andar[1])
 ]
 
-# ================= TÍTULO =================
-st.title("🏢 Dashboard Imobiliário Premium")
-st.markdown("Visão estratégica para tomada de decisão.")
+# =====================================================
+# KPIS
+# =====================================================
+st.subheader("📈 Indicadores")
 
-# ================= KPIs =================
-st.subheader("📊 Resumo Executivo")
+c1, c2, c3, c4 = st.columns(4)
 
-c1, c2, c3, c4, c5, c6 = st.columns(6)
+c1.metric("Unidades", len(base))
+c2.metric("Valor Médio", moeda(base["Valor"].mean()))
+c3.metric("Menor Valor", moeda(base["Valor"].min()))
+c4.metric("Maior Valor", moeda(base["Valor"].max()))
 
-c1.metric("Total", len(df_filtrado))
-c2.metric("Estoque", f"R$ {df_filtrado['valor_venda'].sum():,.0f}")
-c3.metric("Ticket Médio", f"R$ {df_filtrado['valor_venda'].mean():,.0f}")
-c4.metric("Maior", f"R$ {df_filtrado['valor_venda'].max():,.0f}")
-c5.metric("Menor", f"R$ {df_filtrado['valor_venda'].min():,.0f}")
-c6.metric("Preço m²", f"R$ {df_filtrado['preco_m2'].mean():,.0f}")
+st.divider()
 
-st.markdown("---")
+# =====================================================
+# TABELA COMERCIAL
+# =====================================================
+st.subheader("📋 Tabela Comercial")
 
-# ================= LINHA 1 =================
-col1, col2 = st.columns(2)
+resumo = base.groupby("Tipologia Final").agg(
+    Unidades=("Unidade", "count"),
+    A_Partir=("Valor", "min"),
+    Ate=("Valor", "max"),
+    Avaliacao=("Valor", "mean")
+).reset_index()
 
-with col1:
-    st.subheader("🏢 Comparação entre Blocos")
+resumo.columns = [
+    "Tipologia",
+    "Unidades",
+    "A Partir:",
+    "Até:",
+    "Avaliação"
+]
 
-    fig = px.bar(
-        df_filtrado.groupby("bloco")["valor_venda"].sum().reset_index(),
-        x="bloco",
-        y="valor_venda",
-        color="bloco",
-        text_auto=True
-    )
-    st.plotly_chart(fig, use_container_width=True)
+for col in ["A Partir:", "Até:", "Avaliação"]:
+    resumo[col] = resumo[col].apply(moeda)
 
-with col2:
-    st.subheader("🏗️ Valorização por Andar")
+st.dataframe(
+    resumo,
+    use_container_width=True,
+    hide_index=True
+)
 
-    fig = px.line(
-        df_filtrado.groupby("andar")["valor_venda"].mean().reset_index(),
-        x="andar",
-        y="valor_venda",
-        markers=True
-    )
-    st.plotly_chart(fig, use_container_width=True)
+st.divider()
 
-# ================= LINHA 2 =================
-col3, col4 = st.columns(2)
+# =====================================================
+# TABELA DE UNIDADES
+# =====================================================
+st.subheader("🏠 Unidades Disponíveis")
 
-with col3:
-    st.subheader("☀️ Posição Solar")
+mostrar = base[
+    ["Torre", "Unidade", "Andar", "Tipologia Final", "Valor"]
+].copy()
 
-    fig = px.bar(
-        df_filtrado.groupby("posicao")["valor_venda"].mean().reset_index(),
-        x="posicao",
-        y="valor_venda",
-        text_auto=True
-    )
-    st.plotly_chart(fig, use_container_width=True)
+mostrar["Valor"] = mostrar["Valor"].apply(moeda)
 
-with col4:
-    st.subheader("💰 Preço por m²")
+mostrar.columns = [
+    "Bloco",
+    "Unidade",
+    "Andar",
+    "Tipologia",
+    "Preço"
+]
 
-    fig = px.scatter(
-        df_filtrado,
-        x="area",
-        y="valor_venda",
-        color="bloco",
-        size="preco_m2",
-        hover_name="unidade"
-    )
-    st.plotly_chart(fig, use_container_width=True)
+st.dataframe(
+    mostrar.sort_values(["Andar", "Unidade"]),
+    use_container_width=True,
+    hide_index=True
+)
 
-# ================= LINHA 3 =================
-col5, col6 = st.columns(2)
+st.divider()
 
-with col5:
-    st.subheader("📊 Tipos de Apartamento")
+# =====================================================
+# GRÁFICO 1
+# =====================================================
+st.subheader("📊 Preço por Andar")
 
-    top = df_filtrado["quartos"].value_counts().reset_index()
-    top.columns = ["quartos", "quantidade"]
+fig = px.scatter(
+    base,
+    x="Andar",
+    y="Valor",
+    color="Tipologia Final",
+    hover_data=["Unidade"],
+    height=500
+)
 
-    fig = px.bar(top, x="quartos", y="quantidade")
-    st.plotly_chart(fig, use_container_width=True)
+fig.update_layout(
+    yaxis_title="Preço",
+    xaxis_title="Andar",
+    legend_title="Tipologia"
+)
 
-with col6:
-    st.subheader("💎 Unidades Premium")
+st.plotly_chart(fig, use_container_width=True)
 
-    limite = df_filtrado["valor_venda"].quantile(0.9)
-    premium = df_filtrado[df_filtrado["valor_venda"] >= limite]
+# =====================================================
+# GRÁFICO 2
+# =====================================================
+st.subheader("📉 Estoque por Tipologia")
 
-    st.metric("Qtd Premium", len(premium))
-    st.dataframe(premium.sort_values("valor_venda", ascending=False), height=250)
+estoque = base["Tipologia Final"].value_counts().reset_index()
+estoque.columns = ["Tipologia", "Quantidade"]
 
-# ================= TABELA =================
-st.markdown("---")
-st.subheader("📋 Base Completa")
-st.dataframe(df_filtrado, use_container_width=True)
+fig2 = px.bar(
+    estoque,
+    x="Tipologia",
+    y="Quantidade",
+    text="Quantidade",
+    height=450
+)
+
+fig2.update_layout(
+    xaxis_title="Tipologia",
+    yaxis_title="Quantidade"
+)
+
+st.plotly_chart(fig2, use_container_width=True)
+
+# =====================================================
+# FOOTER
+# =====================================================
+st.divider()
+st.caption("Powered by Estogler Analytics • Dashboard Imobiliário Premium V2")
